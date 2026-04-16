@@ -858,36 +858,20 @@
                     <label class="form-label">Bạn chọn ngày tham dự <span class="required">*</span></label>
                     <div class="date-cards">
                         <label class="date-card" data-value="Ngày 1/5 – Pháp thoại tại 37 Lương Quán, Huế (7:45–11:00)">
-                            <input type="radio" name="attendance" value="Ngày 1/5 – Pháp thoại tại 37 Lương Quán, Huế (7:45–11:00)">
+                            <input type="checkbox" name="attendance" value="Ngày 1/5 – Pháp thoại tại 37 Lương Quán, Huế (7:45–11:00)">
                             <div class="date-card-content">
                                 <div class="date-card-title">📍 Ngày 1/5 — Huế</div>
                                 <div class="date-card-desc">7:45 – 11:00 · Pháp thoại · 37 Lương Quán, Huế</div>
                             </div>
                             <span class="date-card-badge" style="color:var(--red);border-color:var(--red);">⚡ Còn 5 chỗ</span>
                         </label>
-                        <label class="date-card" data-value="Ngày 2/5 – Đàm đạo tại Thiền Viện Trúc Lâm Bạch Mã (7:00–9:00)">
-                            <input type="radio" name="attendance" value="Ngày 2/5 – Đàm đạo tại Thiền Viện Trúc Lâm Bạch Mã (7:00–9:00)">
-                            <div class="date-card-content">
-                                <div class="date-card-title">🏯 Ngày 2/5 — Huế</div>
-                                <div class="date-card-desc">7:00 – 9:00 · Đàm đạo &amp; kết nối · Thiền Viện Trúc Lâm Bạch Mã</div>
-                            </div>
-                            <span class="date-card-badge">Còn 10 chỗ</span>
-                        </label>
                         <label class="date-card" data-value="Ngày 3/5 – Pháp thoại tại Kim Yoga, 73 Nguyễn Quang Chung, Đà Nẵng (7:45–11:00)">
-                            <input type="radio" name="attendance" value="Ngày 3/5 – Pháp thoại tại Kim Yoga, 73 Nguyễn Quang Chung, Đà Nẵng (7:45–11:00)">
+                            <input type="checkbox" name="attendance" value="Ngày 3/5 – Pháp thoại tại Kim Yoga, 73 Nguyễn Quang Chung, Đà Nẵng (7:45–11:00)">
                             <div class="date-card-content">
                                 <div class="date-card-title">📍 Ngày 3/5 — Đà Nẵng</div>
                                 <div class="date-card-desc">7:45 – 11:00 · Pháp thoại · Kim Yoga, 73 Nguyễn Quang Chung</div>
                             </div>
                             <span class="date-card-badge">Còn 30 chỗ</span>
-                        </label>
-                        <label class="date-card" data-value="Ngày 3/5 – Pháp thoại tại Yên Homestay Hội An (15:00–17:00)">
-                            <input type="radio" name="attendance" value="Ngày 3/5 – Pháp thoại tại Yên Homestay Hội An (15:00–17:00)">
-                            <div class="date-card-content">
-                                <div class="date-card-title">🌿 Ngày 3/5 — Hội An</div>
-                                <div class="date-card-desc">15:00 – 17:00 · Pháp thoại · Yên Homestay Hội An</div>
-                            </div>
-                            <span class="date-card-badge">Còn 20 chỗ</span>
                         </label>
                     </div>
                     <p class="error-message" id="attendanceError">Vui lòng chọn ngày tham dự</p>
@@ -933,13 +917,17 @@
         const successOverlay = document.getElementById('successOverlay');
 
         // ═══════════════════════════════════════════
-        //  DATE CARD SELECTION
+        //  DATE CARD SELECTION (checkbox — multi-select)
         // ═══════════════════════════════════════════
         document.querySelectorAll('.date-card').forEach(card => {
             card.addEventListener('click', () => {
-                document.querySelectorAll('.date-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                card.querySelector('input[type="radio"]').checked = true;
+                const cb = card.querySelector('input[type="checkbox"]');
+                cb.checked = !cb.checked;
+                card.classList.toggle('selected', cb.checked);
+                // Clear error khi chọn
+                if (cb.checked) {
+                    document.getElementById('attendanceError').classList.remove('visible');
+                }
             });
         });
 
@@ -977,7 +965,7 @@
             const fullname = document.getElementById('fullname').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const source = document.getElementById('source').value;
-            const attendance = document.querySelector('input[name="attendance"]:checked');
+            const attendanceChecked = document.querySelectorAll('input[name="attendance"]:checked');
 
             if (!fullname) {
                 showError('fullname', 'fullnameError');
@@ -994,7 +982,7 @@
                 isValid = false;
             }
 
-            if (!attendance) {
+            if (attendanceChecked.length === 0) {
                 document.getElementById('attendanceError').classList.add('visible');
                 isValid = false;
             }
@@ -1011,12 +999,14 @@
             if (!validateForm()) return;
 
             // Build data
+            const checkedBoxes = document.querySelectorAll('input[name="attendance"]:checked');
+            const attendanceValues = Array.from(checkedBoxes).map(cb => cb.value).join(' | ');
             const formData = {
                 fullname: document.getElementById('fullname').value.trim(),
                 phone: document.getElementById('phone').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 source: document.getElementById('source').value,
-                attendance: document.querySelector('input[name="attendance"]:checked').value,
+                attendance: attendanceValues,
                 timestamp: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
             };
 
@@ -1037,7 +1027,10 @@
                 // Show success
                 successOverlay.classList.add('active');
                 form.reset();
-                document.querySelectorAll('.date-card').forEach(c => c.classList.remove('selected'));
+                document.querySelectorAll('.date-card').forEach(c => {
+                    c.classList.remove('selected');
+                    c.querySelector('input[type="checkbox"]').checked = false;
+                });
 
             } catch (error) {
                 console.error('Error:', error);
